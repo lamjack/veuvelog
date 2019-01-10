@@ -18,13 +18,22 @@ import (
 	"github.com/lamjack/veuvelog"
 )
 
+var (
+	yellow = string([]byte{27, 91, 57, 48, 59, 52, 51, 109})
+	red    = string([]byte{27, 91, 57, 55, 59, 52, 49, 109})
+	blue   = string([]byte{27, 91, 57, 55, 59, 52, 52, 109})
+	reset  = string([]byte{27, 91, 48, 109})
+)
+
 type ConsoleHandler struct {
-	level log.Level
+	level        log.Level
+	disableColor bool
 }
 
 func NewConsoleHandler(lvl log.Level) *ConsoleHandler {
 	h := new(ConsoleHandler)
 	h.level = lvl
+	h.disableColor = false
 	return h
 }
 
@@ -32,10 +41,28 @@ func (h *ConsoleHandler) GetLevel() log.Level {
 	return h.level
 }
 
-func (ConsoleHandler) Handle(record log.Record) {
-	fmt.Printf("%+v", record)
+func (h *ConsoleHandler) Handle(record log.Record) {
+	lvlText := h.getLevelColor(record.Level)
+	fmt.Printf(lvlText + record.Message() + "\n")
 }
 
 func (ConsoleHandler) Close() error {
 	return nil
+}
+
+func (h ConsoleHandler) getLevelColor(lvl log.Level) string {
+	var r string
+	if !h.disableColor {
+		if lvl == log.DEBUG || lvl == log.INFO || lvl == log.NOTICE {
+			r = "[" + fmt.Sprintf(blue+lvl.String()+reset) + "]"
+		} else if lvl == log.WARNING {
+			r = "[" + fmt.Sprintf(yellow+lvl.String()+reset) + "]"
+		} else if lvl == log.ERROR || lvl == log.CRITICAL {
+			r = "[" + fmt.Sprintf(red+lvl.String()+reset) + "]"
+		}
+	}
+	if r == "" {
+		r = fmt.Sprintf("[%s]", lvl.String())
+	}
+	return r
 }
