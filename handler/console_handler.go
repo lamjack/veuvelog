@@ -16,6 +16,7 @@ package handler
 import (
 	"fmt"
 	"github.com/lamjack/veuvelog"
+	"runtime"
 )
 
 var (
@@ -33,7 +34,11 @@ type ConsoleHandler struct {
 func NewConsoleHandler(lvl log.Level) *ConsoleHandler {
 	h := new(ConsoleHandler)
 	h.level = lvl
-	h.disableColor = false
+	if runtime.GOOS == "windows" {
+		h.disableColor = true
+	} else {
+		h.disableColor = false
+	}
 	return h
 }
 
